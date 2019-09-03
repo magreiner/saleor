@@ -30,12 +30,12 @@ from ...menu.utils import update_menu
 from ...order.models import Fulfillment, Order, OrderLine
 from ...order.utils import update_order_status
 from ...page.models import Page
+from ...payment import gateway
 from ...payment.utils import (
     create_payment,
     gateway_authorize,
     gateway_capture,
     gateway_refund,
-    gateway_void,
 )
 from ...product.models import (
     Attribute,
@@ -55,7 +55,6 @@ from ...product.thumbnails import (
 from ...shipping.models import ShippingMethod, ShippingMethodType, ShippingZone
 
 fake = Factory.create()
-
 PRODUCTS_LIST_DIR = "products-list/"
 
 IMAGES_MAPPING = {
@@ -336,7 +335,7 @@ def create_fake_payment(mock_email_confirmation, order):
     gateway_authorize(payment, payment.token)
     # 20% chance to void the transaction at this stage
     if random.choice([0, 0, 0, 0, 1]):
-        gateway_void(payment)
+        gateway.void(payment)
         return payment
     # 25% to end the payment at the authorization stage
     if not random.choice([1, 1, 1, 0]):

@@ -17,9 +17,9 @@ from ...product.models import (
     ProductType,
     ProductVariant,
 )
+from ...product.tasks import update_product_minimal_variant_price_task
 from ...product.utils.availability import get_product_availability
 from ...product.utils.costs import get_margin_for_variant, get_product_costs_data
-from ...product.tasks import update_product_minimal_variant_price_task
 from ..views import staff_member_required
 from . import forms
 from .filters import AttributeFilter, ProductFilter, ProductTypeFilter
