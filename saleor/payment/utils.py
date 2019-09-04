@@ -30,36 +30,12 @@ from .models import Payment, Transaction
 logger = logging.getLogger(__name__)
 
 GENERIC_TRANSACTION_ERROR = "Transaction was unsuccessful"
-REQUIRED_GATEWAY_KEYS = {
-    "transaction_id",
-    "is_success",
-    "kind",
-    "error",
-    "amount",
-    "currency",
-}
 ALLOWED_GATEWAY_KINDS = {choices[0] for choices in TransactionKind.CHOICES}
 GATEWAYS_META_NAMESPACE = "payment-gateways"
 
 
 def list_enabled_gateways() -> List[str]:
     return list(settings.CHECKOUT_PAYMENT_GATEWAYS.keys())
-
-
-def get_gateway_operation_func(gateway, operation_type):
-    """Return gateway method based on the operation type to be performed."""
-    if operation_type == OperationType.PROCESS_PAYMENT:
-        return gateway.process_payment
-    if operation_type == OperationType.AUTH:
-        return gateway.authorize
-    if operation_type == OperationType.CAPTURE:
-        return gateway.capture
-    if operation_type == OperationType.VOID:
-        return gateway.void
-    if operation_type == OperationType.REFUND:
-        return gateway.refund
-    if operation_type == OperationType.CONFIRM:
-        return gateway.confirm
 
 
 def create_payment_information(
@@ -116,22 +92,6 @@ def handle_fully_paid_order(order):
     except Exception:
         # Analytics failing should not abort the checkout flow
         logger.exception("Recording order in analytics failed")
-
-
-def require_active_payment(view):
-    """Require an active payment instance.
-
-    Decorate a view to check if payment is authorized, so any actions
-    can be performed on it.
-    """
-
-    @wraps(view)
-    def func(payment: Payment, *args, **kwargs):
-        if not payment.is_active:
-            raise PaymentError("This payment is no longer active.")
-        return view(payment, *args, **kwargs)
-
-    return func
 
 
 def create_payment(
