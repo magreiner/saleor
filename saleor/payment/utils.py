@@ -426,22 +426,6 @@ def gateway_process_payment(
 
 
 @require_active_payment
-def gateway_authorize(payment: Payment, payment_token: str) -> Transaction:
-    """Authorize the payment and create a relevant transaction.
-
-    Args:
-         payment: the payment to process.
-         payment_token: One-time-use reference to payment information.
-
-    """
-    clean_authorize(payment)
-
-    return call_gateway(
-        operation_type=OperationType.AUTH, payment=payment, payment_token=payment_token
-    )
-
-
-@require_active_payment
 def gateway_confirm(payment) -> Transaction:
     if not payment.can_confirm():
         raise PaymentError("Only active and not paid payments can be confirmed.")
