@@ -34,7 +34,6 @@ from saleor.payment.utils import (
     create_transaction,
     gateway_get_client_token,
     gateway_process_payment,
-    gateway_refund,
     handle_fully_paid_order,
     mark_order_as_paid,
     require_active_payment,
@@ -317,7 +316,7 @@ def test_gateway_get_client_token_not_existing_gateway(settings):
 
 @pytest.mark.parametrize(
     "func",
-    [gateway.authorize, gateway.capture, gateway.confirm, gateway_refund, gateway.void],
+    [gateway.authorize, gateway.capture, gateway.confirm, gateway.refund, gateway.void],
 )
 def test_payment_needs_to_be_active_for_any_action(func, payment_dummy):
     payment_dummy.is_active = False
@@ -367,57 +366,6 @@ def test_gateway_charge_errors(payment_dummy, transaction_token, settings):
 
 
 @patch("saleor.payment.utils.get_payment_gateway")
-def test_gateway_refund(
-    mock_get_payment_gateway, payment_txn_captured, gateway_config, dummy_response
-):
-    txn = payment_txn_captured.transactions.first()
-    payment = payment_txn_captured
-    amount = payment.total
-
-    dummy_response.kind = TransactionKind.REFUND
-    mock_refund = Mock(return_value=dummy_response)
-    mock_get_payment_gateway.return_value = (Mock(refund=mock_refund), gateway_config)
-
-    payment_info = create_payment_information(payment, txn.token, amount)
-    gateway_refund(payment, amount)
-
-    mock_get_payment_gateway.assert_called_once_with(payment.gateway)
-    mock_refund.assert_called_once_with(
-        payment_information=payment_info, config=gateway_config
-    )
-
-    payment.refresh_from_db()
-    assert payment.charge_status == ChargeStatus.FULLY_REFUNDED
-    assert not payment.captured_amount
-
-
-@patch("saleor.payment.utils.get_payment_gateway")
-def test_gateway_refund_partial_refund(
-    mock_get_payment_gateway,
-    payment_txn_captured,
-    gateway_config,
-    settings,
-    dummy_response,
-):
-    payment = payment_txn_captured
-    amount = payment.total * Decimal("0.5")
-    txn = payment_txn_captured.transactions.first()
-    txn.amount = amount
-    txn.currency = settings.DEFAULT_CURRENCY
-
-    dummy_response.kind = TransactionKind.REFUND
-    dummy_response.amount = amount
-    mock_refund = Mock(return_value=dummy_response)
-    mock_get_payment_gateway.return_value = (Mock(refund=mock_refund), gateway_config)
-
-    gateway_refund(payment, amount)
-
-    payment.refresh_from_db()
-    assert payment.charge_status == ChargeStatus.PARTIALLY_REFUNDED
-    assert payment.captured_amount == payment.total - amount
-
-
-@patch("saleor.payment.utils.get_payment_gateway")
 def test_gateway_refund_failed(
     mock_get_payment_gateway,
     payment_txn_captured,
@@ -436,7 +384,7 @@ def test_gateway_refund_failed(
     mock_get_payment_gateway.return_value = (Mock(refund=mock_refund), gateway_config)
 
     with pytest.raises(PaymentError) as exc:
-        gateway_refund(payment, Decimal("10.00"))
+        gateway.refund(payment, Decimal("10.00"))
     assert exc.value.message == EXAMPLE_ERROR
     payment.refresh_from_db()
     assert payment.captured_amount == captured_before
@@ -445,16 +393,16 @@ def test_gateway_refund_failed(
 def test_gateway_refund_errors(payment_txn_captured):
     payment = payment_txn_captured
     with pytest.raises(PaymentError) as exc:
-        gateway_refund(payment, Decimal("1000000"))
+        gateway.refund(payment, Decimal("1000000"))
     assert exc.value.message == "Cannot refund more than captured"
 
     with pytest.raises(PaymentError) as exc:
-        gateway_refund(payment, Decimal("0"))
+        gateway.refund(payment, Decimal("0"))
     assert exc.value.message == "Amount should be a positive number."
 
     payment.charge_status = ChargeStatus.NOT_CHARGED
     with pytest.raises(PaymentError) as exc:
-        gateway_refund(payment, Decimal("1"))
+        gateway.refund(payment, Decimal("1"))
     assert exc.value.message == "This payment cannot be refunded."
 
 

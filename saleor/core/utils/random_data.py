@@ -31,7 +31,7 @@ from ...order.models import Fulfillment, Order, OrderLine
 from ...order.utils import update_order_status
 from ...page.models import Page
 from ...payment import gateway
-from ...payment.utils import create_payment, gateway_refund
+from ...payment.utils import create_payment
 from ...product.models import (
     Attribute,
     AttributeValue,
@@ -339,7 +339,7 @@ def create_fake_payment(mock_email_confirmation, order):
     gateway.capture(payment)
     # 25% to refund the payment
     if random.choice([0, 0, 0, 1]):
-        gateway_refund(payment)
+        gateway.refund(payment)
     return payment
 
 
