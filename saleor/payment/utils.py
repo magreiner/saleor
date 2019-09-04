@@ -426,21 +426,6 @@ def gateway_process_payment(
 
 
 @require_active_payment
-def gateway_confirm(payment) -> Transaction:
-    if not payment.can_confirm():
-        raise PaymentError("Only active and not paid payments can be confirmed.")
-
-    payment_token = get_payment_token(payment)
-    transaction = call_gateway(
-        operation_type=OperationType.CONFIRM,
-        payment=payment,
-        payment_token=payment_token,
-    )
-    gateway_postprocess(transaction, payment)
-    return transaction
-
-
-@require_active_payment
 def gateway_refund(payment, amount: Decimal = None) -> Transaction:
     """Refund the charged funds back to the customer.
 

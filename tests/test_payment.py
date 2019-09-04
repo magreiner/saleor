@@ -316,7 +316,8 @@ def test_gateway_get_client_token_not_existing_gateway(settings):
 
 
 @pytest.mark.parametrize(
-    "func", [gateway.authorize, gateway.capture, gateway_refund, gateway.void]
+    "func",
+    [gateway.authorize, gateway.capture, gateway.confirm, gateway_refund, gateway.void],
 )
 def test_payment_needs_to_be_active_for_any_action(func, payment_dummy):
     payment_dummy.is_active = False
