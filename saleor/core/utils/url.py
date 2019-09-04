@@ -17,18 +17,14 @@ def validate_storefront_url(url):
         parsed_url = urlparse(url)
     except ValueError as error:
         raise ValidationError(
-            {
-                "redirectUrl": ValidationError(
-                    str(error), code=AccountErrorCode.INVALID_STOREFRONT_URL
-                )
-            }
+            {"redirectUrl": ValidationError(str(error), code=AccountErrorCode.INVALID)}
         )
     if not validate_host(parsed_url.netloc, settings.ALLOWED_STOREFRONT_HOSTS):
         raise ValidationError(
             {
                 "redirectUrl": ValidationError(
                     "%s this is not valid storefront address." % parsed_url.netloc,
-                    code=AccountErrorCode.INVALID_STOREFRONT_URL,
+                    code=AccountErrorCode.INVALID,
                 )
             }
         )
