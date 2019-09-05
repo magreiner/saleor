@@ -64,6 +64,7 @@ All notable, unreleased changes to this project will be documented in this file.
 - Drop deprecated fields from api - #4684 by @fowczarek
 - Distinguish OrderLine product name and variant name - #4702 by @fowczarek
 - Fix for Digital products - update order status after automatic fulfillment - #4709 by @korycins
+- Add error codes to mutations responses - #4676 by @Kwaidan00
 
 ## 2.8.0
 
